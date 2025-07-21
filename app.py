@@ -12,7 +12,24 @@ def load_data():
     payouts = pd.read_csv("data/payouts.csv")
     return inf, posts, tracking, payouts
 
-influencers,posts,tracking,payouts = load_data()
+st.sidebar.header("📂 Upload Custom Data (Optional)")
+uploaded_files = {
+    "influencers": st.sidebar.file_uploader("Influencers CSV", type=["csv"]),
+    "posts": st.sidebar.file_uploader("Posts CSV", type=["csv"]),
+    "tracking": st.sidebar.file_uploader("Tracking Data CSV", type=["csv"]),
+    "payouts": st.sidebar.file_uploader("Payouts CSV", type=["csv"])
+}
+
+def load_or_upload(file, fallback):
+    if file:
+        return pd.read_csv(file)
+    return fallback
+
+inf_generated, posts_generated, tracking_generated, payouts_generated = load_data()
+influencers = load_or_upload(uploaded_files["influencers"], inf_generated)
+posts = load_or_upload(uploaded_files["posts"], posts_generated)
+tracking = load_or_upload(uploaded_files["tracking"], tracking_generated)
+payouts = load_or_upload(uploaded_files["payouts"], payouts_generated)
 
 st.title("📊 HealthKart Influencer Campaign Dashboard")
 st.subheader("📈 Key Metrics")
