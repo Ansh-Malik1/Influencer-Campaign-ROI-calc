@@ -31,10 +31,29 @@ posts = load_or_upload(uploaded_files["posts"], posts_generated)
 tracking = load_or_upload(uploaded_files["tracking"], tracking_generated)
 payouts = load_or_upload(uploaded_files["payouts"], payouts_generated)
 
+# --- Filters ---
+st.sidebar.header("🧮 Filters")
+platforms = st.sidebar.multiselect("Platform", influencers["platform"].unique(), default=influencers["platform"].unique())
+categories = st.sidebar.multiselect("Category", influencers["category"].unique(), default=influencers["category"].unique())
+products = st.sidebar.multiselect("Product", tracking["product"].unique(), default=tracking["product"].unique())
+types = st.sidebar.multiselect("Influencer Type", influencers["influencer_type"].unique(), default=influencers["influencer_type"].unique())
+
+influencers_filtered = influencers[
+    influencers['platform'].isin(platforms) &
+    influencers['category'].isin(categories) &
+    influencers['influencer_type'].isin(types)
+]
+posts_filtered = posts[posts['influencer_id'].isin(influencers_filtered['id'])]
+tracking_filtered = tracking[
+    (tracking['influencer_id'].isin(influencers_filtered['id'])) &
+    (tracking['product'].isin(products))
+].copy()
+payouts_filtered = payouts[payouts['influencer_id'].isin(influencers_filtered['id'])]
+
 st.title("📊 HealthKart Influencer Campaign Dashboard")
 st.subheader("📈 Key Metrics")
-total_revenue = tracking['revenue'].sum()
-total_payout = payouts['total_payout'].sum()
+total_revenue = tracking_filtered['revenue'].sum()
+total_payout = payouts_filtered['total_payout'].sum()
 roas = round(total_revenue / total_payout, 2) if total_payout else 0
 
 col1, col2, col3 = st.columns(3)
@@ -45,8 +64,8 @@ col3.metric("ROAS", f"{roas}x")
 st.subheader("📊 Incremental ROAS (Simulated)")
 
 # Simulate control/exposed groups
-control = tracking[tracking['group'] == 0]
-exposed = tracking[tracking['group'] == 1]
+control = tracking_filtered[tracking_filtered['group'] == 0]
+exposed = tracking_filtered[tracking_filtered['group'] == 1]
 
 ctrl_avg = control.groupby('user_id')['revenue'].sum().mean()
 exp_avg = exposed.groupby('user_id')['revenue'].sum().mean()
@@ -59,8 +78,8 @@ st.metric("Incremental ROAS", f"{incremental_roas:.4f}x")
 # --- Top Influencers ---
 st.subheader("🏆 Top Influencers by ROAS")
 
-roas_df = tracking.groupby("influencer_id")['revenue'].sum().reset_index()
-roas_df = pd.merge(roas_df, payouts[['influencer_id', 'total_payout']], on="influencer_id")
+roas_df = tracking_filtered.groupby("influencer_id")['revenue'].sum().reset_index()
+roas_df = pd.merge(roas_df, payouts_filtered[['influencer_id', 'total_payout']], on="influencer_id")
 roas_df['roas'] = roas_df['revenue'] / roas_df['total_payout']
 top_inf = pd.merge(roas_df, influencers, left_on='influencer_id', right_on='id')
 top_inf = top_inf.sort_values('roas', ascending=False)
@@ -96,8 +115,8 @@ plt.clf()
 
 st.subheader("Engagement Rate by Platform")
 
-posts['engagement_rate'] = (posts['likes'] + posts['comments']) / posts['reach']
+posts_filtered['engagement_rate'] = (posts_filtered['likes'] + posts_filtered['comments']) / posts_filtered['reach']
 plt.figure(figsize=(10, 4))
-sns.boxplot(data=posts, x='platform', y='engagement_rate')
+sns.boxplot(data=posts_filtered, x='platform', y='engagement_rate')
 st.pyplot(plt.gcf())
 plt.clf()
