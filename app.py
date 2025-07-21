@@ -56,3 +56,31 @@ if not poor_roas_df.empty:
     st.dataframe(poor_roas_df[['name', 'platform', 'category', 'roas']], use_container_width=True)
 else:
     st.success("All influencers are performing above 1x ROAS 🚀")
+    
+st.markdown("### 💡 Best Personas by Average ROAS")
+
+persona_df = pd.merge(roas_df, influencers, left_on="influencer_id", right_on="id")
+persona_group = persona_df.groupby(["category", "gender"]).agg({
+    "revenue": "sum",
+    "total_payout": "sum"
+}).reset_index()
+persona_group["roas"] = persona_group["revenue"] / persona_group["total_payout"]
+persona_group = persona_group.sort_values("roas", ascending=False)
+
+st.dataframe(persona_group[['category', 'gender', 'roas']], use_container_width=True)
+
+
+plt.figure(figsize=(10, 4))
+sns.barplot(data=persona_group, x="category", y="roas", hue="gender")
+plt.ylabel("Average ROAS")
+plt.title("Best Personas by ROAS")
+st.pyplot(plt.gcf())
+plt.clf()
+
+st.subheader("Engagement Rate by Platform")
+
+posts['engagement_rate'] = (posts['likes'] + posts['comments']) / posts['reach']
+plt.figure(figsize=(10, 4))
+sns.boxplot(data=posts, x='platform', y='engagement_rate')
+st.pyplot(plt.gcf())
+plt.clf()
