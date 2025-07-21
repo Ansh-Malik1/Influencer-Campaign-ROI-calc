@@ -24,3 +24,27 @@ col1, col2, col3 = st.columns(3)
 col1.metric("Total Revenue", f"₹{total_revenue:,.2f}")
 col2.metric("Total Payout", f"₹{total_payout:,.2f}")
 col3.metric("ROAS", f"{roas}x")
+
+st.subheader("📊 Incremental ROAS (Simulated)")
+
+# Simulate control/exposed groups
+control = tracking[tracking['group'] == 0]
+exposed = tracking[tracking['group'] == 1]
+
+ctrl_avg = control.groupby('user_id')['revenue'].sum().mean()
+exp_avg = exposed.groupby('user_id')['revenue'].sum().mean()
+incremental_roas = round((exp_avg - ctrl_avg) / total_payout, 2) if total_payout else 0
+
+st.write(f"**Control Revenue/User**: ₹{ctrl_avg:.2f}")
+st.write(f"**Exposed Revenue/User**: ₹{exp_avg:.2f}")
+st.metric("Incremental ROAS", f"{incremental_roas:.4f}x")
+
+# --- Top Influencers ---
+st.subheader("🏆 Top Influencers by ROAS")
+
+roas_df = tracking.groupby("influencer_id")['revenue'].sum().reset_index()
+roas_df = pd.merge(roas_df, payouts[['influencer_id', 'total_payout']], on="influencer_id")
+roas_df['roas'] = roas_df['revenue'] / roas_df['total_payout']
+top_inf = pd.merge(roas_df, influencers, left_on='influencer_id', right_on='id')
+top_inf = top_inf.sort_values('roas', ascending=False)
+st.dataframe(top_inf[['name', 'platform', 'category', 'follower_count', 'roas']].head(5), use_container_width=True)
