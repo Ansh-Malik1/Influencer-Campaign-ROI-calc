@@ -48,3 +48,11 @@ roas_df['roas'] = roas_df['revenue'] / roas_df['total_payout']
 top_inf = pd.merge(roas_df, influencers, left_on='influencer_id', right_on='id')
 top_inf = top_inf.sort_values('roas', ascending=False)
 st.dataframe(top_inf[['name', 'platform', 'category', 'follower_count', 'roas']].head(5), use_container_width=True)
+
+# Poor ROIs
+st.markdown("### ⚠️ Influencers with Poor ROAS (<1x)")
+poor_roas_df = top_inf[top_inf['roas'] < 1].sort_values('roas')
+if not poor_roas_df.empty:
+    st.dataframe(poor_roas_df[['name', 'platform', 'category', 'roas']], use_container_width=True)
+else:
+    st.success("All influencers are performing above 1x ROAS 🚀")
