@@ -182,3 +182,13 @@ fig, ax = plt.subplots(figsize=(8, 4))
 sns.heatmap(heat_df, annot=True, cmap="YlGnBu", fmt=".2f", ax=ax)
 ax.set_title("Average ROAS by Persona")
 st.pyplot(fig)
+
+# --- Download Buttons ---
+st.subheader("📥 Export Filtered Data")
+
+def convert_df(df):
+     return df.to_csv(index=False, encoding='utf-8').encode("utf-8")
+
+col1, col2 = st.columns(2)
+col1.download_button("Download Influencers", convert_df(influencers_filtered), "influencers.csv", "text/csv")
+col2.download_button("Download Tracking", convert_df(tracking_filtered), "tracking.csv", "text/csv")
