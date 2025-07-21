@@ -7,7 +7,7 @@ import random
 np.random.seed(42)
 os.makedirs("data", exist_ok=True)
 
-def generate_influencers(n=10):
+def generate_influencers(n=50):
     platforms = ['Instagram', 'YouTube', 'Twitter']
     categories = ['Fitness', 'Health', 'Lifestyle']
     genders = ['Male', 'Female', 'Other']
@@ -43,14 +43,14 @@ def generate_influencers(n=10):
 
 def generate_posts(influencers,n_posts=100):
     data=[]
-    influencer=influencers.sample(1).iloc[0]
+    
     for _ in range(n_posts):
         influencer = influencers.sample(1).iloc[0]
         data.append([
             influencer['id'],
             influencer['platform'],
             datetime.today() - timedelta(days=np.random.randint(1, 90)),
-            f"https://socialmedia.com/post/{np.random.randint(1000, 9999)}",
+            f"https://socialmedia.com/post/{np.random.randint(1000, 9999)} ",
             "Great product for health!",
             np.random.randint(1000, 50000),
             np.random.randint(100, 10000),

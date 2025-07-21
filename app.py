@@ -61,6 +61,22 @@ col1.metric("Total Revenue", f"₹{total_revenue:,.2f}")
 col2.metric("Total Payout", f"₹{total_payout:,.2f}")
 col3.metric("ROAS", f"{roas}x")
 
+exposed = tracking[tracking['group'] == 1]
+merged = exposed.merge(influencers_filtered, left_on='influencer_id', right_on='id')
+merged = merged.merge(payouts_filtered, left_on='influencer_id', right_on='influencer_id')
+
+# Group by influencer to compute incremental revenue and ROAS
+influencer_roas_df = merged.groupby('influencer_id').agg({
+    'revenue': 'sum',
+    'total_payout': 'first',
+    'category': 'first',
+    'gender': 'first'
+}).reset_index()
+
+# Calculate ROAS
+influencer_roas_df['roas'] = influencer_roas_df['revenue'] / influencer_roas_df['total_payout']
+influencer_roas_df.rename(columns={'revenue': 'incremental_revenue'}, inplace=True)
+
 st.subheader("📊 Incremental ROAS (Simulated)")
 
 # Simulate control/exposed groups
@@ -105,18 +121,64 @@ persona_group = persona_group.sort_values("roas", ascending=False)
 
 st.dataframe(persona_group[['category', 'gender', 'roas']], use_container_width=True)
 
+st.subheader("💸 Revenue vs. Payout")
 
-plt.figure(figsize=(10, 4))
-sns.barplot(data=persona_group, x="category", y="roas", hue="gender")
-plt.ylabel("Average ROAS")
-plt.title("Best Personas by ROAS")
-st.pyplot(plt.gcf())
-plt.clf()
+fig, ax = plt.subplots(figsize=(8, 5))
+sns.scatterplot(data=influencer_roas_df, x='total_payout', y='incremental_revenue', hue='roas', palette='coolwarm', ax=ax)
+ax.set_title("Incremental Revenue vs. Payout")
+ax.set_xlabel("Payout")
+ax.set_ylabel("Incremental Revenue")
+st.pyplot(fig)
+
+st.subheader("Best personas by ROAS graph")
+fig, ax = plt.subplots(figsize=(12, 6))  # larger and explicit
+sns.barplot(data=persona_group, x="category", y="roas", hue="gender", ax=ax)
+
+ax.set_ylabel("Average ROAS", fontsize=12)
+ax.set_title("Best Personas by ROAS", fontsize=14)
+ax.set_xlabel("Category", fontsize=12)
+ax.legend(title="Gender")
+
+fig.tight_layout()
+st.pyplot(fig) 
 
 st.subheader("Engagement Rate by Platform")
 
-posts_filtered['engagement_rate'] = (posts_filtered['likes'] + posts_filtered['comments']) / posts_filtered['reach']
-plt.figure(figsize=(10, 4))
-sns.boxplot(data=posts_filtered, x='platform', y='engagement_rate')
-st.pyplot(plt.gcf())
-plt.clf()
+required_cols = ['likes', 'comments', 'reach', 'platform']
+if all(col in posts_filtered.columns for col in required_cols):
+    
+    posts_filtered = posts_filtered.dropna(subset=['likes', 'comments', 'reach'])
+    posts_filtered = posts_filtered[posts_filtered['reach'] > 0]
+
+    posts_filtered['engagement_rate'] = (
+        posts_filtered['likes'] + posts_filtered['comments']
+    ) / posts_filtered['reach']
+
+    # Compute average engagement per platform
+    platform_grouped = posts_filtered.groupby('platform')['engagement_rate'].mean().reset_index()
+
+    # Sort platforms by engagement
+    platform_grouped = platform_grouped.sort_values('engagement_rate', ascending=False)
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(14, 6))
+    sns.barplot(data=platform_grouped, x='platform', y='engagement_rate', hue='platform', palette='Set2', ax=ax, legend=False)
+
+    ax.set_title("Average Engagement Rate per Platform", fontsize=16)
+    ax.set_ylabel("Engagement Rate", fontsize=12)
+    ax.set_xlabel("Platform", fontsize=12)
+    ax.tick_params(axis='x', labelrotation=15)
+
+    fig.tight_layout()
+    st.pyplot(fig)
+
+else:
+    st.error("Missing required columns to compute engagement rate.")
+    
+st.subheader("🧬 ROAS by Persona (Category × Gender)")
+heat_df = influencer_roas_df.groupby(['category', 'gender'])['roas'].mean().unstack()
+
+fig, ax = plt.subplots(figsize=(8, 4))
+sns.heatmap(heat_df, annot=True, cmap="YlGnBu", fmt=".2f", ax=ax)
+ax.set_title("Average ROAS by Persona")
+st.pyplot(fig)
