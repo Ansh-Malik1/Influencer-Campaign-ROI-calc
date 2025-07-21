@@ -2,6 +2,9 @@
 
 A Streamlit dashboard to analyze the performance of influencer marketing campaigns. It supports campaign-level and influencer-level filtering, calculates ROAS (Return on Ad Spend), simulates incremental ROAS (A/B testing style), and provides insights via charts and persona breakdowns.
 
+## Demo Videos : 
+1. **Basic Overview of the whole project** : https://www.loom.com/share/261872f8bfb5411dab0ef478f6b208e3?sid=1ce1eb14-bef3-4793-9f56-a3c798b9c779
+2. **In depth explanations of all the features:** : https://www.loom.com/share/b10c842040674393b6ff5a1e7d67056c?sid=1a5d6a70-e63e-4bd8-a60c-bbd2a97ff597
 ---
 
 ## 📦 Installation & Setup
