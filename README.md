@@ -5,6 +5,7 @@ A Streamlit dashboard to analyze the performance of influencer marketing campaig
 ## Demo Videos : 
 1. **Basic Overview of the whole project** : https://www.loom.com/share/261872f8bfb5411dab0ef478f6b208e3?sid=1ce1eb14-bef3-4793-9f56-a3c798b9c779
 2. **In depth explanations of all the features:** : https://www.loom.com/share/b10c842040674393b6ff5a1e7d67056c?sid=1a5d6a70-e63e-4bd8-a60c-bbd2a97ff597
+3. **Filtering based on differernt parameters:** : https://www.loom.com/share/6b8fd39eaf464959be41d896165ca441?sid=9eca7a1e-05ef-4b33-bdcc-606b6499e9e4
 ---
 
 ## 📦 Installation & Setup
